@@ -16,7 +16,6 @@ import { useAppSelector } from '@/store';
 import { selectSelectMode } from '@/store/slices/table/tableSlice';
 import { trackColumns } from '@/configs/columnsConfig';
 import { getTable } from '@/utils/getTable';
-
 import { Loader } from '../Loader';
 import PaginationControls from './PaginationControls';
 import TableBodyComponent from './TableBody';
@@ -26,7 +25,6 @@ import { AudioUploadModal } from '@/components/Audio/AudioUploadModal';
 import { AlertDialogComponent } from '@/components/AlertDialog';
 import { Track } from '@/types/shared/track';
 import { Dialog } from '../ui/dialog';
-import { useExclusiveAudio } from '@/utils/hooks/useExclusiveAudio';
 
 export default function TrackTable() {
   const {
@@ -40,7 +38,6 @@ export default function TrackTable() {
     sorting,
   } = useTableParams({ listKey: TRACKS_LIST_KEY });
   const deleteTrack = useDeleteTrack();
-  const { play: handlePlayAudio } = useExclusiveAudio();
   const { data: tracksData, isLoading, isFetching } = useTracksQuery(params);
 
   const tracks = tracksData?.data ?? [];
@@ -56,6 +53,7 @@ export default function TrackTable() {
   const [trackForEdit, setTrackForEdit] = useState<Track | null>(null);
   const [trackForUpload, setTrackForUpload] = useState<Track | null>(null);
   const [trackForDelete, setTrackForDelete] = useState<Track | null>(null);
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
 
   const selectMode = useAppSelector(selectSelectMode);
 
@@ -77,16 +75,19 @@ export default function TrackTable() {
     () =>
       trackColumns({
         selectMode,
-        playAudio: handlePlayAudio,
+        playAudio: (id: string) => setPlayingTrackId(id),
         onEdit: setTrackForEdit,
         onUpload: setTrackForUpload,
         onDelete: setTrackForDelete,
       }),
-    [selectMode, handlePlayAudio]
+    [selectMode, setPlayingTrackId]
   );
 
   const table = getTable({
-    tracks,
+    tracks: tracks.map((track) => ({
+      ...track,
+      isPlaying: track.id === playingTrackId,
+    })),
     columns,
     sorting,
     handleSortingChange,
@@ -96,6 +97,10 @@ export default function TrackTable() {
     setColumnVisibility,
     setColumnFilters,
     setRowSelection,
+    meta: {
+      playingTrackId,
+      setPlayingTrackId,
+    },
   });
 
   const loading = isLoading || isFetching;

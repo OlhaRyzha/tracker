@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { HiXMark } from 'react-icons/hi2';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ export function AudioUploadModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null | undefined>(null);
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedFile) {
@@ -43,10 +45,7 @@ export function AudioUploadModal({
     }
     const url = URL.createObjectURL(selectedFile);
     setSelectedUrl(url);
-    return () => {
-      URL.revokeObjectURL(url);
-      setSelectedUrl(null);
-    };
+    return () => URL.revokeObjectURL(url);
   }, [selectedFile]);
 
   const handleChoose = () => fileRef.current?.click();
@@ -54,6 +53,7 @@ export function AudioUploadModal({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (!file) return;
+
     validateAudioFile(file).then(({ valid, error }) => {
       if (!valid) {
         setError(error);
@@ -63,6 +63,10 @@ export function AudioUploadModal({
         setSelectedFile(file);
       }
     });
+  };
+
+  const handlePlayPause = (id: string) => {
+    setPlayingTrackId((prev) => (prev === id ? null : id));
   };
 
   const handleSave = () => {
@@ -108,64 +112,65 @@ export function AudioUploadModal({
           </p>
         )}
 
-        {selectedFile && selectedUrl && (
-          <div className='mt-4'>
-            <p className='text-sm mb-2'>Preview:</p>
-            <Waveform
-              url={selectedUrl}
-              id={track?.id}
-            />
-            <div className='flex items-center space-x-2'>
-              <span className='truncate'>{selectedFile.name}</span>
-              <Button
-                type='button'
-                size='icon'
-                variant='outline'
-                onClick={() => setSelectedFile(null)}
-                data-testid={`clear-selected-file-${track.id}`}>
-                ✕
-              </Button>
+        <div className='mt-4 space-y-4'>
+          {selectedFile && selectedUrl && (
+            <div>
+              <p className='text-sm mb-2'>Preview:</p>
+              <Waveform
+                url={selectedUrl}
+                id='preview'
+                isPlaying={playingTrackId === 'preview'}
+                onPlayPause={handlePlayPause}
+                minWidth={50}
+              />
+              <div className='flex items-center gap-2 mt-2'>
+                <span className='truncate text-sm'>{selectedFile.name}</span>
+                <button
+                  onClick={() => setSelectedFile(null)}
+                  className='text-gray-500 hover:text-gray-700'
+                  data-testid={`clear-selected-file-${track.id}`}>
+                  <HiXMark className='h-4 w-4' />
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {!selectedFile && track.audioFile && (
-          <div className='mt-4'>
-            <p className='text-sm mb-2'>Current file:</p>
-            <audio
-              controls
-              src={track.audioFile}
-              className='w-full mb-4'
-              data-testid={`audio-player-${track.id}`}
-            />
-          </div>
-        )}
+          {!selectedFile && track.audioFile && (
+            <div>
+              <p className='text-sm mb-2'>Current file:</p>
+              <Waveform
+                url={`${import.meta.env.VITE_API_BASE_URL}/api/files/${
+                  track.audioFile
+                }`}
+                id={track.id}
+                isPlaying={playingTrackId === track.id}
+                onPlayPause={handlePlayPause}
+              />
+            </div>
+          )}
+        </div>
 
-        <DialogFooter className='flex justify-between'>
+        <DialogFooter className='flex justify-between mt-4'>
           {track.audioFile && !selectedFile && (
             <Button
-              type='button'
               variant='destructive'
               onClick={handleRemove}
               data-testid={`delete-audio-${track.id}`}>
               {BTNS_LABELS.REMOVE_FILE}
             </Button>
           )}
-          <div className='ml-auto flex space-x-2'>
+          <div className='flex gap-2 ml-auto'>
             <Button
-              type='button'
-              onClick={handleChoose}
-              data-testid={`choose-file-${track.id}`}>
-              {BTNS_LABELS.CHOOSE_FILE}
-            </Button>
-            <Button
-              type='button'
               variant='outline'
               onClick={() => onOpenChange(false)}>
               {BTNS_LABELS.CANCEL}
             </Button>
             <Button
-              type='button'
+              onClick={handleChoose}
+              data-testid={`choose-file-${track.id}`}>
+              {BTNS_LABELS.CHOOSE_FILE}
+            </Button>
+            <Button
               disabled={!selectedFile}
               onClick={handleSave}
               data-testid={`save-audio-${track.id}`}>

@@ -1,5 +1,12 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Track } from '@/types/shared/track';
+
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData> {
+    playingTrackId?: string | null;
+    setPlayingTrackId?: (id: string | null) => void;
+  }
+}
 import noCover from '@/assets/image_not_available.png';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -13,13 +20,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import { RiDeleteBin5Fill } from 'react-icons/ri';
+import Waveform from '@/components/Audio/AudioWaveform';
 
 interface TrackColumnsOpts {
   selectMode: boolean;
   onEdit: (t: Track) => void;
   onUpload: (t: Track) => void;
   onDelete: (t: Track) => void;
-  playAudio: (el: HTMLAudioElement) => void;
+  playAudio: (audioUrl: string) => void;
 }
 
 export const trackColumns = ({
@@ -34,6 +42,7 @@ export const trackColumns = ({
   if (selectMode) {
     cols.push({
       id: 'select',
+
       header: ({ table }) => (
         <Checkbox
           data-testid='select-all'
@@ -59,6 +68,8 @@ export const trackColumns = ({
   cols.push(
     {
       accessorKey: 'title',
+      size: 200,
+      minSize: 150,
       header: ({ column }) => (
         <Button
           type='button'
@@ -76,6 +87,8 @@ export const trackColumns = ({
     },
     {
       accessorKey: 'artist',
+      size: 200,
+      minSize: 150,
       header: ({ column }) => (
         <Button
           type='button'
@@ -93,6 +106,8 @@ export const trackColumns = ({
     {
       id: 'cover',
       header: 'Cover',
+      size: 200,
+      minSize: 150,
       cell: ({ row }) => (
         <img
           className='h-12 w-12 rounded object-cover'
@@ -105,21 +120,37 @@ export const trackColumns = ({
     {
       id: 'audio',
       header: 'Audio',
-      cell: ({ row }) =>
-        row.original.audioFile ? (
-          <audio
-            controls
-            src={row.original.audioFile}
-            onPlay={(e) => playAudio(e.currentTarget)}
-            data-testid={`audio-player-${row.original.id}`}
+      size: 600,
+      minSize: 400,
+      cell: ({ row, table }) => {
+        const track = row.original;
+        const audioUrl = track.audioFile
+          ? `${import.meta.env.VITE_API_BASE_URL}/api/files/${track.audioFile}`
+          : null;
+
+        return audioUrl ? (
+          <Waveform
+            url={audioUrl}
+            id={track.id}
+            isPlaying={table.options.meta?.playingTrackId === track.id}
+            onPlayPause={(id) => {
+              if (table.options.meta?.setPlayingTrackId) {
+                table.options.meta.setPlayingTrackId(
+                  table.options.meta.playingTrackId === id ? null : id
+                );
+              }
+            }}
           />
         ) : (
           <span className='text-sm text-muted-foreground'>—</span>
-        ),
+        );
+      },
     },
     {
       accessorKey: 'genres',
       header: 'Genres',
+      size: 200,
+      minSize: 150,
       meta: { filterVariant: 'select' },
       cell: ({ row }) => (
         <span data-testid={`track-item-${row.original.id}-genres`}>
@@ -132,6 +163,7 @@ export const trackColumns = ({
       header: () => <span className='text-right'>Actions</span>,
       enableHiding: false,
       size: 120,
+      minSize: 120,
       cell: ({ row }) => {
         const track = row.original;
         return (

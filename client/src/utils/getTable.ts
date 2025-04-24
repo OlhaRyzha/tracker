@@ -21,6 +21,10 @@ interface GetTableProps<T extends { id: string | number }> {
   setColumnVisibility: OnChangeFn<VisibilityState>;
   setColumnFilters: OnChangeFn<ColumnFiltersState>;
   setRowSelection: (updater: Record<string, boolean>) => void;
+  meta?: {
+    playingTrackId: string | null;
+    setPlayingTrackId: (id: string | null) => void;
+  };
 }
 
 export function getTable<T extends { id: string | number }>(
@@ -37,11 +41,16 @@ export function getTable<T extends { id: string | number }>(
     setColumnVisibility,
     setColumnFilters,
     setRowSelection,
+    meta,
   } = props;
 
   return useReactTable({
     data: tracks,
     columns,
+    defaultColumn: {
+      size: 150,
+      minSize: 100,
+    },
     state: {
       sorting,
       columnFilters,
@@ -62,5 +71,7 @@ export function getTable<T extends { id: string | number }>(
     getFilteredRowModel: getFilteredRowModel(),
     manualPagination: true,
     getRowId: (row) => String(row.id),
+    meta,
+    onColumnSizingChange: () => {},
   });
 }
