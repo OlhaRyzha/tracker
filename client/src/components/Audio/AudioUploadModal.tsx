@@ -121,7 +121,6 @@ export function AudioUploadModal({
                 id='preview'
                 isPlaying={playingTrackId === 'preview'}
                 onPlayPause={handlePlayPause}
-                minWidth={50}
               />
               <div className='flex items-center gap-2 mt-2'>
                 <span className='truncate text-sm'>{selectedFile.name}</span>

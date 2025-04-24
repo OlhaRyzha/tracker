@@ -24,7 +24,7 @@ const Waveform = ({
   id,
   isPlaying,
   onPlayPause,
-  minWidth = 200,
+  minWidth,
 }: WaveformProps) => {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
@@ -81,7 +81,7 @@ const Waveform = ({
 
   return (
     <div
-      className={`min-w-[${minWidth}px] flex items-center gap-1 ${
+      className={`min-w-[200px] flex items-center gap-1 ${
         !error
           ? 'bg-gray-50 p-2 rounded-xl shadow-lg border border-gray-200'
           : ''
