@@ -2,12 +2,6 @@
 
 A single-page React application for managing music tracks: create, edit, delete, search, filter, paginate, and upload audio files.
 
-Environment Variables
-
-Create a .env file in the client root with:
-
-VITE_API_BASE_URL=http://localhost:8000
-
 ---
 
 ## Features
