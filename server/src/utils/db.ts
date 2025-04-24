@@ -316,18 +316,14 @@ export const deleteMultipleTracks = async (ids: string[]): Promise<BatchDeleteRe
  * @param buffer File data buffer
  * @returns Generated filename of the saved file
  */
-export const saveAudioFile = async (
-  id: string, 
-  fileName: string, 
-  buffer: Buffer
-): Promise<string> => {
-  const fileExt = path.extname(fileName);
-  const safeFileName = `${id}${fileExt}`;
-  const filePath = path.join(UPLOADS_DIR, safeFileName);
+export const saveAudioFile = async (id: string, filename: string, buffer: Buffer) => {
+  const ext = path.extname(filename);
+  const newFilename = `${id}${ext}`;
+  const filePath = path.join(config.storage.uploadsDir, newFilename);
   
+  await fs.mkdir(config.storage.uploadsDir, { recursive: true });
   await fs.writeFile(filePath, buffer);
-  
-  return safeFileName;
+  return newFilename;
 };
 
 /**

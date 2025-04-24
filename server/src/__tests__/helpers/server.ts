@@ -79,11 +79,12 @@ export async function buildServer(): Promise<FastifyInstance> {
   });
   
   // Register plugins
-  await server.register(cors, {
-    origin: config.cors.origin,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+await server.register(cors, {
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Length', 'Content-Range']
+});
   
   await server.register(multipart, {
     limits: {
@@ -92,12 +93,17 @@ export async function buildServer(): Promise<FastifyInstance> {
   });
   
   // Serve static files (uploads) from test directory
-  await server.register(fastifyStatic, {
-    root: TEST_UPLOADS_DIR,
-    prefix: '/api/files/',
-    decorateReply: false,
-  });
-  
+await server.register(fastifyStatic, {
+  root: config.storage.uploadsDir,
+  prefix: '/api/files/',
+  setHeaders: (res, path) => {
+    if (path.endsWith('.mp3')) {
+      res.setHeader('Content-Type', 'audio/mpeg');
+    }
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Accept-Ranges', 'bytes');
+  }
+});
   // Register Swagger
   await server.register(swagger, {
     openapi: {
