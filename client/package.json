@@ -1,6 +1,6 @@
 {
-  "name": "tracks-manager-client",
-  "homepage": "https://github.com/OlhaRyzha/tracker.git",
+  "name": "tracker",
+  "homepage": "https://olharyzha.github.io/tracker/",
   "version": "1.0.0",
   "private": true,
   "type": "module",
