@@ -9,7 +9,7 @@
     "start": "npm run dev",
     "build": "vite build --outDir build",
     "lint": "eslint .",
-    "predeploy": "npm run build",
+    "predeploy": "npm run build && cp build/index.html build/404.html",
     "deploy": "gh-pages -d build",
     "preview": "vite preview"
   },
