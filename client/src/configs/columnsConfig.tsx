@@ -20,7 +20,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import { RiDeleteBin5Fill } from 'react-icons/ri';
-import Waveform from '@/components/Audio/AudioWaveform';
+import { lazy, Suspense } from 'react';
+import { Loader } from '@/components/Loader';
+
+const Waveform = lazy(() => import('@/components/Audio/AudioWaveform'));
 
 interface TrackColumnsOpts {
   selectMode: boolean;
@@ -129,18 +132,20 @@ export const trackColumns = ({
           : null;
 
         return audioUrl ? (
-          <Waveform
-            url={audioUrl}
-            id={track.id}
-            isPlaying={table.options.meta?.playingTrackId === track.id}
-            onPlayPause={(id) => {
-              if (table.options.meta?.setPlayingTrackId) {
-                table.options.meta.setPlayingTrackId(
-                  table.options.meta.playingTrackId === id ? null : id
-                );
-              }
-            }}
-          />
+          <Suspense fallback={<Loader loading />}>
+            <Waveform
+              url={audioUrl}
+              id={track.id}
+              isPlaying={table.options.meta?.playingTrackId === track.id}
+              onPlayPause={(id) => {
+                if (table.options.meta?.setPlayingTrackId) {
+                  table.options.meta.setPlayingTrackId(
+                    table.options.meta.playingTrackId === id ? null : id
+                  );
+                }
+              }}
+            />
+          </Suspense>
         ) : (
           <span className='text-sm text-muted-foreground'>—</span>
         );

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, lazy, Suspense } from 'react';
 import { HiXMark } from 'react-icons/hi2';
 import {
   Dialog,
@@ -15,9 +15,10 @@ import {
 } from '@/utils/hooks/tanStackQuery/useTracksQuery';
 import { validateAudioFile } from '@/utils/audioUpload';
 import type { Track } from '@/types/shared/track';
-import Waveform from './AudioWaveform';
 import { BTNS_LABELS } from '@/constants/labels.constant';
 import { Loader } from '../Loader';
+
+const Waveform = lazy(() => import('@/components/Audio/AudioWaveform'));
 
 interface AudioUploadModalProps {
   track: Track;
@@ -126,12 +127,14 @@ export function AudioUploadModal({
           {selectedFile && selectedUrl ? (
             <>
               <p className='text-sm mb-2'>Preview:</p>
-              <Waveform
-                url={selectedUrl}
-                id='preview'
-                isPlaying={playingTrackId === 'preview'}
-                onPlayPause={handlePlayPause}
-              />
+              <Suspense fallback={<Loader loading />}>
+                <Waveform
+                  url={selectedUrl}
+                  id='preview'
+                  isPlaying={playingTrackId === 'preview'}
+                  onPlayPause={handlePlayPause}
+                />
+              </Suspense>
               <div className='flex items-center gap-2 mt-2'>
                 <span className='truncate text-sm'>{selectedFile.name}</span>
                 <button
@@ -145,14 +148,16 @@ export function AudioUploadModal({
           ) : track.audioFile ? (
             <>
               <p className='text-sm mb-2'>Current file:</p>
-              <Waveform
-                url={`${import.meta.env.VITE_API_BASE_URL}/api/files/${
-                  track.audioFile
-                }`}
-                id={track.id}
-                isPlaying={playingTrackId === track.id}
-                onPlayPause={handlePlayPause}
-              />
+              <Suspense fallback={<Loader loading />}>
+                <Waveform
+                  url={`${import.meta.env.VITE_API_BASE_URL}/api/files/${
+                    track.audioFile
+                  }`}
+                  id={track.id}
+                  isPlaying={playingTrackId === track.id}
+                  onPlayPause={handlePlayPause}
+                />
+              </Suspense>
             </>
           ) : null}
         </div>
