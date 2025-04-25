@@ -38,7 +38,12 @@ export default function TrackTable() {
     sorting,
   } = useTableParams({ listKey: TRACKS_LIST_KEY });
   const deleteTrack = useDeleteTrack();
-  const { data: tracksData, isLoading, isFetching } = useTracksQuery(params);
+  const {
+    data: tracksData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useTracksQuery(params);
 
   const tracks = tracksData?.data ?? [];
   const totalItems = tracksData?.meta?.total ?? 0;
@@ -54,6 +59,7 @@ export default function TrackTable() {
   const [trackForUpload, setTrackForUpload] = useState<Track | null>(null);
   const [trackForDelete, setTrackForDelete] = useState<Track | null>(null);
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const selectMode = useAppSelector(selectSelectMode);
 
@@ -61,6 +67,13 @@ export default function TrackTable() {
     (track: Track) => deleteTrack.mutate({ id: track.id }),
     [deleteTrack]
   );
+
+  const handleUploaded = () => {
+    setUploading(true);
+    refetch().finally(() => {
+      setUploading(false);
+    });
+  };
 
   useEffect(() => {
     setRowSelection({});
@@ -127,6 +140,7 @@ export default function TrackTable() {
           track={trackForUpload}
           open={!!trackForUpload}
           onOpenChange={(o) => !o && setTrackForUpload(null)}
+          onUploaded={handleUploaded}
         />
       )}
       <AlertDialogComponent

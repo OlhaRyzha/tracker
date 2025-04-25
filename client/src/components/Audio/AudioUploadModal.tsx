@@ -17,19 +17,22 @@ import { validateAudioFile } from '@/utils/audioUpload';
 import type { Track } from '@/types/shared/track';
 import Waveform from './AudioWaveform';
 import { BTNS_LABELS } from '@/constants/labels.constant';
+import { Loader } from '../Loader';
 
 interface AudioUploadModalProps {
   track: Track;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUploaded?: () => void;
 }
 
 export function AudioUploadModal({
   track,
   open,
   onOpenChange,
+  onUploaded,
 }: AudioUploadModalProps) {
-  const { mutate: upload } = useUploadTrackAudio();
+  const { mutateAsync: upload, isPending } = useUploadTrackAudio();
   const { mutate: remove } = useDeleteTrackAudio();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -69,16 +72,23 @@ export function AudioUploadModal({
     setPlayingTrackId((prev) => (prev === id ? null : id));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedFile) return;
-    upload({ id: track.id, file: selectedFile });
-    onOpenChange(false);
+    try {
+      await upload({ id: track?.id, file: selectedFile });
+      onOpenChange(false);
+      onUploaded?.();
+    } catch (error) {
+      console.error('Error uploading audio:', error);
+    }
   };
-
   const handleRemove = () => {
     remove({ id: track.id });
     onOpenChange(false);
   };
+  if (isPending) {
+    return <Loader loading={isPending} />;
+  }
 
   return (
     <Dialog
@@ -113,8 +123,8 @@ export function AudioUploadModal({
         )}
 
         <div className='mt-4 space-y-4'>
-          {selectedFile && selectedUrl && (
-            <div>
+          {selectedFile && selectedUrl ? (
+            <>
               <p className='text-sm mb-2'>Preview:</p>
               <Waveform
                 url={selectedUrl}
@@ -131,11 +141,9 @@ export function AudioUploadModal({
                   <HiXMark className='h-4 w-4' />
                 </button>
               </div>
-            </div>
-          )}
-
-          {!selectedFile && track.audioFile && (
-            <div>
+            </>
+          ) : track.audioFile ? (
+            <>
               <p className='text-sm mb-2'>Current file:</p>
               <Waveform
                 url={`${import.meta.env.VITE_API_BASE_URL}/api/files/${
@@ -145,8 +153,8 @@ export function AudioUploadModal({
                 isPlaying={playingTrackId === track.id}
                 onPlayPause={handlePlayPause}
               />
-            </div>
-          )}
+            </>
+          ) : null}
         </div>
 
         <DialogFooter className='flex justify-between mt-4'>
